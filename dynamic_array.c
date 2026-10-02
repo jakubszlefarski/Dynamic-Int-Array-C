@@ -19,6 +19,16 @@ enum OPERATION{
     UNDEFINED
 };
 
+enum MODE{
+    INSERT,
+    DELETE
+};
+
+typedef struct Args{
+    int value;
+    int index;
+}Args;
+
 int inttoenum(int intinput){
      
     switch (intinput)
@@ -69,6 +79,71 @@ int sumarray(IntArray array){
 
 }
 
+void pushpull(IntArray *array, int index, int value, enum MODE mode){
+    // int len = array->size;
+    if(mode == INSERT){
+        if (index < 0) index = 0;
+        if (index > array->size) index = array->size;
+
+        int *temp = realloc(array->data, sizeof(int) * (array->size + 1));
+        if (temp != NULL){
+            array->data = temp;
+            for(int i = array->size; i > index; i--){
+                array->data[i] = array->data[i-1];
+                
+                
+            }
+            array->data[index] = value;
+            array->size++;
+        }
+        else{
+            printf("realloc erorr");
+        }
+
+    }
+    else if(mode == DELETE){
+            ;
+    }
+    else{
+        printf("mode invalid");
+    }
+
+}
+
+void append(IntArray *array, struct Args *args){
+    int *temp = realloc(array->data, sizeof(int) * (array->size + 1));
+    if (temp != NULL){
+        array->data = temp;
+        int tempindex = (args->index == -1? array->size : args->index);
+        printf("%d %d", args->index, args->value);
+        if (args->index == -1){
+            array->size++;
+            array->data[tempindex] = args->value; 
+        }
+        else{
+            pushpull(array, tempindex, args->value, INSERT);
+        }
+        // array->data[tempindex] = args->value;
+
+    }
+    else{
+        printf("realloc error");
+    }
+    
+
+
+}
+
+void pop(IntArray *array, struct Args *args){
+    if(args->index == -1){
+        array
+    }
+    
+    pushpull(array, args->index, args->value,DELETE)
+}
+
+
+//sorting
 void swap(IntArray *array, int currentindex){ //via indexes
     int a = currentindex;
     int b = a + 1;
@@ -98,6 +173,44 @@ void sortarray(IntArray *array){
     
 }
 
+struct Args* getargs(enum MODE mode){
+    if(mode == INSERT){
+        printf("provide number and index, for example:\n1 1(or just one number to append)\n>");
+        char buff[100];
+        while(1){
+            if (fgets(buff, sizeof(buff), stdin) != NULL){
+                struct Args tempargs = {0, -1};
+                struct Args *r = (struct Args *)malloc(sizeof(struct Args));
+                // printf("inserting %d to %d index ...", tempargs.value, tempargs.index);
+                if(r == NULL){
+                    printf("malloc error");
+                    return NULL;
+                }
+                int a = sscanf(buff, "%d %d", &tempargs.value, &tempargs.index);
+                r->index = tempargs.index;
+                r->value = tempargs.value;
+                if (a == 2 || a == 1){
+                    return r;
+                }
+            
+                else{
+                    free(r);
+                    printf("use valid arguments\n");
+                }
+            }
+            
+        }
+    }
+    else if(mode == DELETE){
+        ;//popping args
+    }
+    else{
+        printf("invalid mode");
+    } 
+   
+
+}
+
 enum OPERATION useroplogic(int intinput, IntArray *intarray){
     enum OPERATION tempaction = inttoenum(intinput);
     switch (tempaction)
@@ -109,7 +222,12 @@ enum OPERATION useroplogic(int intinput, IntArray *intarray){
         sumarray(*intarray); 
         break;
     case APPEND:
-        /* code */
+        //przyjmowanie aegymentow
+        struct Args* argsptr = getargs();
+        append(intarray, argsptr);
+        printf("\n");
+        printarray(*intarray);
+        free(argsptr);
         break;
     case POP:
         /* code */
@@ -156,9 +274,7 @@ void getuserop(IntArray array){
 
 
 
-// int append(int array.size, int *array){
-//     ;
-// }
+
 
 
 int main(){
