@@ -69,13 +69,12 @@ void printarray(IntArray array){
     }
 }
 
-int sumarray(IntArray array){
+void sumarray(IntArray array){
     int tempsum = 0;
     for(int p = 0; p < array.size; p++){
         tempsum+= array.data[p];
     }
-    printf("the sum of array equals %d", tempsum);
-    return  tempsum;
+    printf("the sum of array equals %d\n", tempsum);
 
 }
 
@@ -102,7 +101,10 @@ void pushpull(IntArray *array, int index, int value, enum MODE mode){
 
     }
     else if(mode == DELETE){
-            ;
+        for(int i = index; i < array->size; i++){
+           array->data[i] = array->data[i+1];    
+        }
+        array->size--;
     }
     else{
         printf("mode invalid");
@@ -135,11 +137,24 @@ void append(IntArray *array, struct Args *args){
 }
 
 void pop(IntArray *array, struct Args *args){
-    if(args->index == -1){
-        array
-    }
     
-    pushpull(array, args->index, args->value,DELETE)
+    if(args->index == -1){
+        // array->data[array->size] = NULL;
+        array->size--;
+        
+    }
+    else{
+        //make index safe
+        if (args->index > array->size) args->index = array->size;
+        if (args->index < 0) args->index = 0;
+
+        pushpull(array, args->index, args->value, DELETE);
+        
+
+    }
+
+    
+    
 }
 
 
@@ -173,10 +188,10 @@ void sortarray(IntArray *array){
     
 }
 
-struct Args* getargs(enum MODE mode){
+struct Args* getargs(enum MODE mode, IntArray *array){
+    char buff[100];
     if(mode == INSERT){
         printf("provide number and index, for example:\n1 1(or just one number to append)\n>");
-        char buff[100];
         while(1){
             if (fgets(buff, sizeof(buff), stdin) != NULL){
                 struct Args tempargs = {0, -1};
@@ -202,7 +217,30 @@ struct Args* getargs(enum MODE mode){
         }
     }
     else if(mode == DELETE){
-        ;//popping args
+        printf("provide index of which element you want to delete\n(p for standard pop)\n>");
+        if (fgets(buff, sizeof(buff), stdin) != NULL){
+            struct Args tempargs = {0, -1};//value doesnt matter for this op
+            struct Args *r = (struct Args *)malloc(sizeof(struct Args));
+            // printf("inserting %d to %d index ...", tempargs.value, tempargs.index);
+            if(r == NULL){
+                printf("malloc error");
+                return NULL;
+            }
+            if(buff[0] == 'P' || buff[0] == 'p'){
+                r->index = array->size;
+                return r;
+            }
+            int a = sscanf(buff, "%d", &tempargs.index);
+            r->index = tempargs.index;
+            if (a == 2 || a == 1){
+                return r;
+            }
+                
+            else{
+                free(r);
+                printf("use valid arguments\n");
+            }
+                }
     }
     else{
         printf("invalid mode");
@@ -223,14 +261,17 @@ enum OPERATION useroplogic(int intinput, IntArray *intarray){
         break;
     case APPEND:
         //przyjmowanie aegymentow
-        struct Args* argsptr = getargs();
+        struct Args* argsptr = getargs(INSERT, intarray);
         append(intarray, argsptr);
         printf("\n");
         printarray(*intarray);
         free(argsptr);
         break;
     case POP:
-        /* code */
+        argsptr = getargs(DELETE, intarray);
+        pop(intarray, argsptr);
+        printarray(*intarray);
+        free(argsptr);
         break;
     case SORT:
         sortarray(intarray); //bubble sort
@@ -336,8 +377,13 @@ int main(){
         array.size++;
 
     }
-    printarray(array);
-    getuserop(array);
+    while (1)
+    {
+        printarray(array);
+        getuserop(array);
+        /* code */
+    }
+    
     // printarray(array);
     // sumarray(array);
 
@@ -347,6 +393,5 @@ int main(){
     free(array.data);
     return 0;
 
-    //musi automatycznie wyluskiwac metadane ze struktur
     //dodac podstawowe operacje na listach z pythona
 }
